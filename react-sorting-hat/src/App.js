@@ -1,65 +1,109 @@
-import React from "react";
-import Quiz from "./components/quiz";
+import React, { Component } from "react";
+import Start from "./components/Start.js";
+import QuestionList from "./components/QuestionList.js";
+import Question from "./components/Question.js";
+import Sorted from "./components/Sorted.js";
 import "./App.css";
 
+
 class App extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
     this.state = {
-      page: "StartPage",
-      answer0: 0,
-      answer1: 0,
-      answer2: 0,
-      answer3: 0,
-    };
-    this.questions = {
-      question1: {
-        questionText: "What would you rather be?",
-        answerText1: "Trusted",
-        answerText2: "Liked",
-        answerText3: "Imitated",
-        answerText4: "Praised",
-        answerText5: "Envied",
-        answerText6: "Feared",
-      },
-      question2: {
-        questionText: "which road tempts you",
-        answerText1: "Sunny Lane",
-        answerText2: "Dark Alley",
-        answerText3: "Twisting path through the woods",
-        answerText4: "Cobbled street",
-      },
-      question3: {
-        questionText: "Dusk or Dawn?",
-        answerText1: "Dusk",
-        answerText2: "Dawn",
-      },
-      question4: {
-        questionText: "What is most difficult to deal with?",
-        answerText1: "Hunger",
-        answerText2: "Cold",
-        answerText3: "Loneliness",
-        answerText4: "Boredom",
-        answerText5: "Being Ignored",
-      },
-      question5: {
-        questionText: "Which power would you choose?",
-        answerText1: "Read Minds",
-        answerText2: "Invisibility",
-        answerText3: "Superhuman Strength",
-        answerText4: "Speak to Animals",
-        answerText5: "change the past",
-        answerText6: "Change your appearance at will",
-      },
+      started: false,
+      questionList: QuestionList,
+      currentIndex: 0,
+      currentQuestion: "",
+      sortedHouse: "",
+      lastQuestion: false,
+      houses: [
+        {
+          name: "Gryffindor",
+          points: 0,
+        },
+        {
+          name: "Slytherin",
+          points: 0,
+        },
+        {
+          name: "Hufflepuff",
+          points: 0,
+        },
+        {
+          name: "Ravenclaw",
+          points: 0,
+        },
+      ],
     };
   }
 
+  componentDidMount() {
+    this.setState((prevState) => ({
+      currentQuestion: prevState.questionList[prevState.currentIndex],
+    }));
+  }
+
+  handleStart = () => {
+    this.setState({ started: true });
+  };
+
+  handleAnswer = (selected) => {
+    if (selected) {
+      this.setState((prevState) => ({
+        houses: prevState.houses.map((house) => {
+          if (house.name.toLowerCase() === selected) {
+            house.points = house.points + 1;
+            return house;
+          } else {
+            return house;
+          }
+        }),
+      }));
+      if (this.state.currentIndex < this.state.questionList.length - 1) {
+        this.setState((prevState) => ({
+          currentIndex: prevState.currentIndex + 1,
+        }));
+        console.log(this.state.houses);
+        this.nextQuestion();
+      } else {
+        this.sort();
+      }
+    }
+  };
+
+  handleQuestion = () => {
+    if (this.state.currentIndex === this.state.questionList.length - 1) {
+      this.setState({ lastQuestion: true });
+    }
+  };
+
+  nextQuestion = () => {
+    this.setState((prevState) => ({
+      currentQuestion: prevState.questionList[prevState.currentIndex],
+    }));
+  };
+
+  sort = () => {
+    let chosenHouse = this.state.houses.reduce((first, house) => {
+      return house.points > first.points ? house : first;
+    });
+    this.setState({ sortedHouse: chosenHouse });
+    console.log(this.state.sortedHouse);
+  };
+
   render() {
+    const showQuestions = this.state.started && !this.state.sortedHouse;
+    const showSorted = this.state.started && this.state.sortedHouse;
     return (
-      <div className="container">
-        <h2>HI, WELCOME TO HOGWARTS!! </h2>
-        <p>Let's get ya sorted now </p>
-        <button> QUIZ </button>
+      <div className="App">
+        <Question
+          currentQuestion={this.state.currentQuestion}
+          handleAnswerChange={this.handleAnswerChange}
+          handleAnswer={this.handleAnswer}
+          lastQuestion={this.state.lastQuestion}
+          handleQuestion={this.handleQuestion}
+        />
+        {showSorted && <Sorted sortedHouse={this.state.sortedHouse} />}
       </div>
     );
   }
